@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>关于我们</h2>
+<p class="lead">我们是一个充满活力的开发团队，致力于创建优秀的Web应用。</p>
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>项目介绍</h3>
+        <p>这个Flask项目是我们团队合作的成果，展示了现代Web开发的最佳实践：</p>
+        <ul>
+            <li><strong>前后端分离</strong>：清晰的模板结构和API设计</li>
+            <li><strong>响应式设计</strong>：使用Bootstrap确保跨设备兼容</li>
+            <li><strong>团队协作</strong>：完善的Git工作流和代码规范</li>
+            <li><strong>可扩展架构</strong>：模块化设计便于功能扩展</li>
+        </ul>
+    </div>
+    <div class="col-md-4">
+        <h3>技术栈</h3>
+        <div class="list-group">
+            <div class="list-group-item">
+                <strong>后端：</strong>Flask + Python
+            </div>
+            <div class="list-group-item">
+                <strong>前端：</strong>Bootstrap + JavaScript
+            </div>
+            <div class="list-group-item">
+                <strong>模板引擎：</strong>Jinja2
+            </div>
+            <div class="list-group-item">
+                <strong>版本控制：</strong>Git + GitHub
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4">
+
+<h3>团队成员</h3>
+<div class="row">
+    {% for member in team_members %}
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ member.name }}</h5>
+                <p class="card-text">{{ member.role }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

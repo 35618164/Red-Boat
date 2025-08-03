@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">欢迎来到Flask团队项目！</h1>
+    <p class="lead">这是一个适合小组合作开发的Flask Web应用示例。</p>
+    <hr class="my-4">
+    <p>项目包含了基础的路由、模板、静态文件管理，以及团队协作所需的配置文件。</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('about') }}" role="button">了解团队</a>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">功能特性</h5>
+                <p class="card-text">基于Flask框架，支持模板渲染、静态文件服务、API接口等。</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">团队协作</h5>
+                <p class="card-text">包含Git配置、代码规范、项目文档等团队开发必需工具。</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">扩展性强</h5>
+                <p class="card-text">模块化设计，便于添加新功能和页面。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API测试按钮 -->
+<div class="mt-4">
+    <h3>API测试</h3>
+    <button id="test-api" class="btn btn-success">测试API接口</button>
+    <div id="api-result" class="mt-3"></div>
+</div>
+{% endblock %}
