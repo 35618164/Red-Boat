@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南湖纪念馆地图集成测试</title>
+    
+    <!-- Leaflet 地图库 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- 样式 -->
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #map { height: 500px; width: 100%; border: 2px solid #007bff; border-radius: 8px; }
+        .controls { margin: 20px 0; }
+        .btn { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .info-panel { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .route-info { background: #e7f3ff; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🗺️ 南湖纪念馆智能地图导航系统测试</h1>
+    
+    <div class="controls">
+        <button class="btn" onclick="showMemorialArea()">📍 定位纪念馆</button>
+        <button class="btn" onclick="showIndoorMap()">🏛️ 室内地图</button>
+        <button class="btn" onclick="planRoute()">🗺️ 规划路线</button>
+        <button class="btn" onclick="showExhibits()">🎨 展示展品</button>
+    </div>
+    
+    <!-- 地图容器 -->
+    <div id="map"></div>
+    
+    <!-- 信息面板 -->
+    <div class="info-panel">
+        <h3>📊 地图信息</h3>
+        <div id="map-info">点击按钮测试不同的地图功能...</div>
+    </div>
+    
+    <script>
+        // 初始化地图
+        var map = L.map('map').setView([30.7617, 120.0106], 15);
+        
+        // 添加OpenStreetMap图层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors | 南湖纪念馆智能导航系统',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // 纪念馆位置标记
+        var memorialMarker = L.marker([30.7617, 120.0106]).addTo(map)
+            .bindPopup('<b>🏛️ 南湖纪念馆</b><br>中国共产党的诞生地');
+        
+        // 模拟展品位置数据
+        var exhibits = [
+            {name: "中共一大会址", lat: 30.7617, lng: 120.0106, type: "会议", description: "中国共产党第一次全国代表大会会址"},
+            {name: "红船模型", lat: 30.7620, lng: 120.0108, type: "模型", description: "中共一大闭幕会议举行地红船复制模型"},
+            {name: "党章展示", lat: 30.7615, lng: 120.0104, type: "文献", description: "历届党章发展历程展示"},
+            {name: "革命文物", lat: 30.7622, lng: 120.0110, type: "文物", description: "早期革命活动相关文物"},
+            {name: "历史照片", lat: 30.7614, lng: 120.0102, type: "照片", description: "珍贵历史照片集锦"},
+            {name: "领袖题词", lat: 30.7625, lng: 120.0112, type: "书法", description: "重要领导人题词墨宝"},
+            {name: "多媒体展示", lat: 30.7618, lng: 120.0115, type: "多媒体", description: "现代科技展示历史"},
+            {name: "互动体验区", lat: 30.7627, lng: 120.0118, type: "互动", description: "沉浸式历史体验"}
+        ];
+        
+        // 展品标记数组
+        var exhibitMarkers = [];
+        var routePolyline = null;
+        
+        // 定位纪念馆功能
+        function showMemorialArea() {
+            map.setView([30.7617, 120.0106], 18);
+            memorialMarker.openPopup();
+            updateInfo("📍 已定位到南湖纪念馆主建筑");
+        }
+        
+        // 显示室内地图功能
+        function showIndoorMap() {
+            // 清除之前的标记
+            exhibitMarkers.forEach(marker => map.removeLayer(marker));
+            exhibitMarkers = [];
+            
+            // 添加展品标记
+            exhibits.forEach((exhibit, index) => {
+                var icon = getExhibitIcon(exhibit.type);
+                var marker = L.marker([exhibit.lat, exhibit.lng], {icon: icon})
+                    .bindPopup(`<b>${exhibit.name}</b><br>类型: ${exhibit.type}<br>${exhibit.description}`)
+                    .addTo(map);
+                exhibitMarkers.push(marker);
+            });
+            
+            map.setView([30.7617, 120.0106], 19);
+            updateInfo(`🏛️ 已加载 ${exhibits.length} 个展品位置，点击地图标记查看详情`);
+        }
+        
+        // 路线规划功能
+        function planRoute() {
+            if (exhibitMarkers.length === 0) {
+                showIndoorMap();
+            }
+            
+            // 清除之前的路线
+            if (routePolyline) {
+                map.removeLayer(routePolyline);
+            }
+            
+            // 创建模拟路线（简化的TSP路径）
+            var routePoints = [
+                [30.7617, 120.0106], // 起点
+                [30.7620, 120.0108], // 红船模型
+                [30.7622, 120.0110], // 革命文物
+                [30.7625, 120.0112], // 领袖题词
+                [30.7627, 120.0118], // 互动体验区
+                [30.7618, 120.0115], // 多媒体展示
+                [30.7615, 120.0104], // 党章展示
+                [30.7614, 120.0102], // 历史照片
+                [30.7617, 120.0106]  // 回到起点
+            ];
+            
+            // 绘制路线
+            routePolyline = L.polyline(routePoints, {
+                color: '#ff0000',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '10, 5'
+            }).addTo(map);
+            
+            // 添加路线方向箭头
+            routePoints.forEach((point, index) => {
+                if (index < routePoints.length - 1) {
+                    L.circle(point, {
+                        radius: 3,
+                        color: '#ff0000',
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.8
+                    }).addTo(map);
+                }
+            });
+            
+            // 计算路线信息
+            var totalDistance = calculateRouteDistance(routePoints);
+            var estimatedTime = Math.round(totalDistance * 100 + 30); // 模拟参观时间
+            
+            updateInfo(`🗺️ 路线规划完成！<br>
+                <div class="route-info">
+                    📏 总距离: ${totalDistance.toFixed(0)}米<br>
+                    ⏱️ 预计时间: ${estimatedTime}分钟<br>
+                    🎯 包含展品: ${exhibits.length}个<br>
+                    📍 路线类型: 智能优化路线
+                </div>`);
+        }
+        
+        // 显示所有展品
+        function showExhibits() {
+            showIndoorMap();
+            
+            var exhibitList = exhibits.map(e => `• ${e.name} (${e.type})`).join('<br>');
+            updateInfo(`🎨 展品列表:<br>${exhibitList}`);
+        }
+        
+        // 获取展品图标
+        function getExhibitIcon(type) {
+            var icons = {
+                '会议': '🏛️',
+                '模型': '🚢',
+                '文献': '📜',
+                '文物': '🏺',
+                '照片': '📸',
+                '书法': '🖋️',
+                '多媒体': '📺',
+                '互动': '🎮'
+            };
+            
+            return L.divIcon({
+                html: `<div style="background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 2px solid #007bff; font-size: 16px;">${icons[type] || '📍'}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+        }
+        
+        // 计算路线距离
+        function calculateRouteDistance(points) {
+            var totalDistance = 0;
+            for (var i = 0; i < points.length - 1; i++) {
+                var p1 = L.latLng(points[i]);
+                var p2 = L.latLng(points[i + 1]);
+                totalDistance += p1.distanceTo(p2);
+            }
+            return totalDistance;
+        }
+        
+        // 更新信息面板
+        function updateInfo(message) {
+            document.getElementById('map-info').innerHTML = message;
+        }
+        
+        // 地图点击事件
+        map.on('click', function(e) {
+            console.log(`点击位置: ${e.latlng.lat}, ${e.latlng.lng}`);
+        });
+        
+        // 初始化信息
+        updateInfo("🗺️ 地图已加载完成，使用OpenStreetMap数据<br>📍 当前位置: 南湖纪念馆区域");
+        
+        // 测试API连接
+        console.log('🚀 南湖纪念馆地图系统已启动');
+        console.log('📊 使用数据源: OpenStreetMap');
+        console.log('🎯 支持功能: 室内导航、路线规划、展品定位');
+    </script>
+</body>
+</html>

@@ -2,44 +2,99 @@
 
 {% block content %}
 <div class="jumbotron bg-light p-5 rounded">
-    <h1 class="display-4">欢迎来到Flask团队项目！</h1>
-    <p class="lead">这是一个适合小组合作开发的Flask Web应用示例。</p>
+    <h1 class="display-4">欢迎来到南湖纪念馆智能导览系统！</h1>
+    <p class="lead">为您提供个性化的参观路线规划，让每一次参观都成为难忘的红色之旅。</p>
     <hr class="my-4">
-    <p>项目包含了基础的路由、模板、静态文件管理，以及团队协作所需的配置文件。</p>
-    <a class="btn btn-primary btn-lg" href="{{ url_for('about') }}" role="button">了解团队</a>
+    <p>基于AI大模型技术，根据您的兴趣偏好和参观时间，智能推荐最适合的参观路线。</p>
+    <div class="d-flex gap-3">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('route_planner_page') }}" role="button">
+            <i class="fas fa-route"></i> 开始路线规划
+        </a>
+        <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('about') }}" role="button">了解我们</a>
+    </div>
 </div>
 
 <div class="row mt-4">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">功能特性</h5>
-                <p class="card-text">基于Flask框架，支持模板渲染、静态文件服务、API接口等。</p>
+        <div class="card h-100 border-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-route fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">🧠 智能路线规划</h5>
+                <p class="card-text">基于AI大模型的个性化路线推荐，根据您的兴趣和时间安排最优参观路线。</p>
+                <a href="{{ url_for('route_planner_page') }}" class="btn btn-primary">立即体验</a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">团队协作</h5>
-                <p class="card-text">包含Git配置、代码规范、项目文档等团队开发必需工具。</p>
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                <h5 class="card-title">👥 个性化推荐</h5>
+                <p class="card-text">支持不同年龄段、兴趣偏好和无障碍需求的个性化参观路线定制。</p>
+                <a href="{{ url_for('route_planner_page') }}" class="btn btn-outline-success">开始规划</a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">扩展性强</h5>
-                <p class="card-text">模块化设计，便于添加新功能和页面。</p>
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-3x text-info mb-3"></i>
+                <h5 class="card-title">⏱️ 时间优化</h5>
+                <p class="card-text">智能计算参观时间和路径距离，让您的纪念馆之旅更加高效舒适。</p>
+                <a href="{{ url_for('route_planner_page') }}" class="btn btn-outline-info">了解更多</a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- API测试按钮 -->
-<div class="mt-4">
-    <h3>API测试</h3>
-    <button id="test-api" class="btn btn-success">测试API接口</button>
+<!-- 快速入口区域 -->
+<div class="mt-5">
+    <h3 class="text-center mb-4">🚀 快速入口</h3>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="d-grid">
+                <a href="{{ url_for('route_planner_page') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-route me-2"></i>
+                    开始智能路线规划
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="d-grid">
+                <button id="test-api" class="btn btn-success btn-lg">
+                    <i class="fas fa-flask me-2"></i>
+                    测试API接口
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="api-result" class="mt-3"></div>
+</div>
+
+<!-- 系统特色介绍 -->
+<div class="mt-5 p-4 bg-light rounded">
+    <h4 class="text-center mb-4">🌟 系统特色</h4>
+    <div class="row">
+        <div class="col-md-3 text-center mb-3">
+            <i class="fas fa-brain fa-2x text-primary mb-2"></i>
+            <h6>AI智能推荐</h6>
+            <small class="text-muted">大模型驱动的个性化推荐</small>
+        </div>
+        <div class="col-md-3 text-center mb-3">
+            <i class="fas fa-map-marked-alt fa-2x text-success mb-2"></i>
+            <h6>精准导航</h6>
+            <small class="text-muted">实时路径优化和导航</small>
+        </div>
+        <div class="col-md-3 text-center mb-3">
+            <i class="fas fa-universal-access fa-2x text-info mb-2"></i>
+            <h6>无障碍支持</h6>
+            <small class="text-muted">关爱每一位参观者</small>
+        </div>
+        <div class="col-md-3 text-center mb-3">
+            <i class="fas fa-history fa-2x text-warning mb-2"></i>
+            <h6>历史记录</h6>
+            <small class="text-muted">保存和分享您的路线</small>
+        </div>
+    </div>
 </div>
 {% endblock %}

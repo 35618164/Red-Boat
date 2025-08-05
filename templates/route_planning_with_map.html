@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 左侧设置面板 -->
+        <div class="col-lg-4 bg-light">
+            <div class="h-100 d-flex flex-column">
+                <!-- 头部 -->
+                <div class="bg-primary text-white p-4">
+                    <h4 class="mb-0"><i class="fas fa-cog"></i> 智能路线规划</h4>
+                    <p class="mb-0 opacity-75">个性化定制您的参观体验</p>
+                </div>
+                
+                <!-- 设置表单 -->
+                <div class="flex-grow-1 p-4">
+                    <form id="routeForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">👤 年龄段</label>
+                            <select class="form-select" name="age_group">
+                                <option value="youth">青少年 (12-18岁)</option>
+                                <option value="adult" selected>成年人 (19-60岁)</option>
+                                <option value="senior">老年人 (60岁以上)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">🎯 兴趣偏好</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interests" value="history" checked>
+                                        <label class="form-check-label">📜 历史文献</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interests" value="artifacts">
+                                        <label class="form-check-label">🏺 文物展品</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interests" value="interactive">
+                                        <label class="form-check-label">🎮 互动体验</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interests" value="multimedia">
+                                        <label class="form-check-label">📺 多媒体</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">⏱️ 参观时间</label>
+                            <select class="form-select" name="visit_time">
+                                <option value="30">⚡ 快速参观 (30分钟)</option>
+                                <option value="60" selected>🚶 标准参观 (1小时)</option>
+                                <option value="90">🔍 深度参观 (1.5小时)</option>
+                                <option value="120">📚 详细参观 (2小时)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">♿ 无障碍需求</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="accessibility" value="wheelchair">
+                                <label class="form-check-label">🦽 轮椅通道</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="accessibility" value="hearing">
+                                <label class="form-check-label">🔊 听力辅助</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="accessibility" value="visual">
+                                <label class="form-check-label">👁️ 视觉辅助</label>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary btn-lg w-100 mb-3" onclick="generateRoute()">
+                            <i class="fas fa-route"></i> 生成智能路线
+                        </button>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="showAllExhibits()">
+                                <i class="fas fa-eye"></i> 查看所有展品
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="showMemorialArea()">
+                                <i class="fas fa-home"></i> 纪念馆总览
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- 路线结果 -->
+                <div id="routeResult" class="border-top bg-white p-4" style="display: none;">
+                    <h5 class="text-primary mb-3"><i class="fas fa-map-marked-alt"></i> 推荐路线</h5>
+                    <div id="routeDetails">
+                        <!-- 路线详情将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧地图区域 -->
+        <div class="col-lg-8">
+            <div class="position-sticky" style="top: 0; height: 100vh;">
+                <!-- 地图工具栏 -->
+                <div class="bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-map text-primary"></i> 南湖纪念馆导览地图</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="showMemorialArea()" title="纪念馆总览">
+                            <i class="fas fa-home"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="showAllExhibits()" title="显示所有展品">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearMap()" title="清除地图">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="toggleFullscreen()" title="全屏模式">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 地图容器 -->
+                <div id="map" style="height: calc(100vh - 80px); width: 100%;"></div>
+                
+                <!-- 地图状态栏 -->
+                <div class="bg-light border-top px-3 py-2 d-flex justify-content-between align-items-center small">
+                    <span id="mapStatus">🗺️ 地图已加载完成</span>
+                    <span class="text-muted">基于 OpenStreetMap</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入Leaflet地图库 -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// 全局变量
+var map;
+var exhibitMarkers = [];
+var routePolyline = null;
+var memorialMarker;
+var isFullscreen = false;
+
+// 展品数据（与后端同步）
+var exhibits = [
+    {id: "001", name: "中共一大会址", lat: 30.7617, lng: 120.0106, type: "会议", importance: 5, visit_duration: 15, description: "中国共产党第一次全国代表大会会址"},
+    {id: "002", name: "红船模型", lat: 30.7620, lng: 120.0108, type: "模型", importance: 5, visit_duration: 10, description: "中共一大闭幕会议举行地红船复制模型"},
+    {id: "003", name: "党章展示", lat: 30.7615, lng: 120.0104, type: "文献", importance: 4, visit_duration: 8, description: "历届党章发展历程展示"},
+    {id: "004", name: "革命文物", lat: 30.7622, lng: 120.0110, type: "文物", importance: 4, visit_duration: 12, description: "早期革命活动相关文物"},
+    {id: "005", name: "历史照片", lat: 30.7614, lng: 120.0102, type: "照片", importance: 3, visit_duration: 6, description: "珍贵历史照片集锦"},
+    {id: "006", name: "领袖题词", lat: 30.7625, lng: 120.0112, type: "书法", importance: 4, visit_duration: 8, description: "重要领导人题词墨宝"},
+    {id: "007", name: "多媒体展示", lat: 30.7618, lng: 120.0115, type: "多媒体", importance: 3, visit_duration: 10, description: "现代科技展示历史"},
+    {id: "008", name: "互动体验区", lat: 30.7627, lng: 120.0118, type: "互动", importance: 4, visit_duration: 20, description: "沉浸式历史体验"}
+];
+
+// 初始化地图
+function initMap() {
+    // 创建地图实例
+    map = L.map('map', {
+        center: [30.7617, 120.0106],
+        zoom: 16,
+        zoomControl: true,
+        attributionControl: true
+    });
+    
+    // 添加地图图层 - 使用多个图层源以提高可用性
+    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        maxZoom: 20
+    });
+    
+    var cartoDB = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://carto.com/">CARTO</a>',
+        maxZoom: 20
+    });
+    
+    // 默认使用OSM图层
+    osmLayer.addTo(map);
+    
+    // 添加图层控制
+    L.control.layers({
+        "OpenStreetMap": osmLayer,
+        "CartoDB Light": cartoDB
+    }).addTo(map);
+    
+    // 添加比例尺
+    L.control.scale({
+        position: 'bottomleft',
+        metric: true,
+        imperial: false
+    }).addTo(map);
+    
+    // 添加纪念馆主建筑标记
+    memorialMarker = L.marker([30.7617, 120.0106], {
+        icon: createMemorialIcon()
+    }).addTo(map).bindPopup(createMemorialPopup());
+    
+    // 地图事件监听
+    map.on('zoomend', updateMapStatus);
+    map.on('moveend', updateMapStatus);
+    
+    // 初始状态更新
+    updateMapStatus();
+    
+    console.log('🗺️ 地图初始化完成');
+}
+
+// 创建纪念馆主建筑图标
+function createMemorialIcon() {
+    return L.divIcon({
+        html: `<div style="
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+            font-size: 22px;
+            font-weight: bold;
+        ">🏛️</div>`,
+        iconSize: [50, 50],
+        iconAnchor: [25, 25],
+        className: 'memorial-main-icon'
+    });
+}
+
+// 创建纪念馆弹窗内容
+function createMemorialPopup() {
+    return `
+        <div style="text-align: center; padding: 5px;">
+            <h6 style="color: #dc3545; margin-bottom: 8px;">
+                <i class="fas fa-landmark"></i> 南湖纪念馆
+            </h6>
+            <p style="margin-bottom: 5px; color: #666;">中国共产党的诞生地</p>
+            <p style="margin-bottom: 8px; font-size: 0.9em; color: #888;">
+                📍 主入口 | 🕒 开放时间: 9:00-17:00
+            </p>
+            <button class="btn btn-sm btn-primary" onclick="showAllExhibits()">
+                <i class="fas fa-eye"></i> 查看展品
+            </button>
+        </div>
+    `;
+}
+
+// 获取展品图标
+function getExhibitIcon(exhibit, index = null) {
+    var typeIcons = {
+        '会议': '🏛️', '模型': '🚢', '文献': '📜', '文物': '🏺',
+        '照片': '📸', '书法': '🖋️', '多媒体': '📺', '互动': '🎮'
+    };
+    
+    var colors = {
+        5: '#dc3545', // 红色 - 最重要
+        4: '#007bff', // 蓝色 - 重要
+        3: '#28a745', // 绿色 - 一般
+        2: '#ffc107', // 黄色
+        1: '#6c757d'  // 灰色
+    };
+    
+    var size = exhibit.importance >= 4 ? 40 : 35;
+    var bgColor = colors[exhibit.importance] || colors[3];
+    var displayText = index !== null ? index : typeIcons[exhibit.type] || '📍';
+    
+    return L.divIcon({
+        html: `<div style="
+            background: ${bgColor};
+            color: white;
+            border-radius: 50%;
+            width: ${size}px;
+            height: ${size}px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            font-size: ${index !== null ? '16px' : size-20+'px'};
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        " onmouseover="this.style.transform='scale(1.1)'" 
+           onmouseout="this.style.transform='scale(1)'">${displayText}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
+        className: 'exhibit-marker'
+    });
+}
+
+// 创建展品弹窗内容
+function createExhibitPopup(exhibit, index = null) {
+    var orderText = index !== null ? `<div class="text-center mb-2">
+        <span class="badge bg-primary" style="font-size: 1em;">第 ${index} 站</span>
+    </div>` : '';
+    
+    return `
+        <div style="min-width: 200px;">
+            ${orderText}
+            <h6 style="color: #333; margin-bottom: 8px;">
+                <i class="fas fa-star" style="color: #ffc107;"></i> 
+                ${exhibit.name}
+            </h6>
+            <div style="margin-bottom: 8px;">
+                <span class="badge" style="background-color: #007bff;">
+                    ${exhibit.type}
+                </span>
+                <span style="margin-left: 8px; color: #666;">
+                    ${'⭐'.repeat(exhibit.importance)}
+                </span>
+            </div>
+            <p style="margin-bottom: 8px; font-size: 0.9em; color: #666;">
+                ${exhibit.description}
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; color: #888;">
+                <span><i class="fas fa-clock"></i> ${exhibit.visit_duration}分钟</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${exhibit.lat.toFixed(4)}, ${exhibit.lng.toFixed(4)}</span>
+            </div>
+        </div>
+    `;
+}
+
+// 显示纪念馆区域
+function showMemorialArea() {
+    map.setView([30.7617, 120.0106], 18);
+    memorialMarker.openPopup();
+    updateMapStatus('📍 已定位到纪念馆主建筑');
+}
+
+// 显示所有展品
+function showAllExhibits() {
+    clearExhibitMarkers();
+    
+    exhibits.forEach((exhibit, index) => {
+        var marker = L.marker([exhibit.lat, exhibit.lng], {
+            icon: getExhibitIcon(exhibit)
+        })
+        .bindPopup(createExhibitPopup(exhibit))
+        .addTo(map);
+        
+        // 添加鼠标悬停效果
+        marker.on('mouseover', function() {
+            this.openPopup();
+        });
+        
+        exhibitMarkers.push(marker);
+    });
+    
+    // 调整地图视野以包含所有标记
+    if (exhibitMarkers.length > 0) {
+        var group = new L.featureGroup([memorialMarker, ...exhibitMarkers]);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+    
+    updateMapStatus(`👁️ 已显示 ${exhibits.length} 个展品位置`);
+}
+
+// 清除展品标记
+function clearExhibitMarkers() {
+    exhibitMarkers.forEach(marker => map.removeLayer(marker));
+    exhibitMarkers = [];
+}
+
+// 清除地图
+function clearMap() {
+    clearExhibitMarkers();
+    if (routePolyline) {
+        map.removeLayer(routePolyline);
+        routePolyline = null;
+    }
+    map.setView([30.7617, 120.0106], 16);
+    updateMapStatus('🧹 地图已清除');
+}
+
+// 切换全屏模式
+function toggleFullscreen() {
+    var mapContainer = document.getElementById('map').parentElement.parentElement;
+    var button = document.querySelector('[onclick="toggleFullscreen()"] i');
+    
+    if (!isFullscreen) {
+        mapContainer.style.position = 'fixed';
+        mapContainer.style.top = '0';
+        mapContainer.style.left = '0';
+        mapContainer.style.width = '100vw';
+        mapContainer.style.height = '100vh';
+        mapContainer.style.zIndex = '9999';
+        mapContainer.style.background = 'white';
+        button.className = 'fas fa-compress';
+        isFullscreen = true;
+    } else {
+        mapContainer.style.position = '';
+        mapContainer.style.top = '';
+        mapContainer.style.left = '';
+        mapContainer.style.width = '';
+        mapContainer.style.height = '';
+        mapContainer.style.zIndex = '';
+        mapContainer.style.background = '';
+        button.className = 'fas fa-expand';
+        isFullscreen = false;
+    }
+    
+    // 重新调整地图大小
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
+}
+
+// 更新地图状态
+function updateMapStatus(message = null) {
+    var status = message || `📍 缩放级别: ${map.getZoom()} | 📍 中心: ${map.getCenter().lat.toFixed(4)}, ${map.getCenter().lng.toFixed(4)}`;
+    document.getElementById('mapStatus').innerHTML = status;
+}
+
+// 生成智能路线
+async function generateRoute() {
+    var button = document.querySelector('[onclick="generateRoute()"]');
+    var originalText = button.innerHTML;
+    
+    // 显示加载状态
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 智能分析中...';
+    button.disabled = true;
+    
+    try {
+        var formData = new FormData(document.getElementById('routeForm'));
+        var preferences = {};
+        
+        // 收集表单数据
+        for (let [key, value] of formData.entries()) {
+            if (!preferences[key]) preferences[key] = [];
+            preferences[key].push(value);
+        }
+        
+        // 调用后端API
+        const response = await fetch('/api/route-planning/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_preferences: preferences,
+                location: 'nanhu_memorial'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayRoute(result.data);
+            updateMapStatus('🎯 智能路线已生成');
+        } else {
+            throw new Error(result.message || '路线生成失败');
+        }
+    } catch (error) {
+        console.error('路线生成错误:', error);
+        alert('路线生成失败: ' + error.message);
+        updateMapStatus('❌ 路线生成失败');
+    } finally {
+        // 恢复按钮状态
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// 显示路线
+function displayRoute(routeData) {
+    // 清除之前的内容
+    clearExhibitMarkers();
+    if (routePolyline) {
+        map.removeLayer(routePolyline);
+    }
+    
+    // 显示推荐的展品
+    var routePoints = [[30.7617, 120.0106]]; // 起点：纪念馆入口
+    
+    routeData.recommended_exhibits.forEach((exhibitId, index) => {
+        var exhibit = exhibits.find(e => e.id === exhibitId);
+        if (exhibit) {
+            // 添加带编号的标记
+            var marker = L.marker([exhibit.lat, exhibit.lng], {
+                icon: getExhibitIcon(exhibit, index + 1)
+            })
+            .bindPopup(createExhibitPopup(exhibit, index + 1))
+            .addTo(map);
+            
+            exhibitMarkers.push(marker);
+            routePoints.push([exhibit.lat, exhibit.lng]);
+        }
+    });
+    
+    // 绘制路线
+    routePolyline = L.polyline(routePoints, {
+        color: '#ff6b35',
+        weight: 5,
+        opacity: 0.8,
+        dashArray: '10, 5',
+        lineJoin: 'round',
+        lineCap: 'round'
+    }).addTo(map);
+    
+    // 添加路线动画效果
+    var animatedPolyline = L.polyline(routePoints, {
+        color: '#fff',
+        weight: 2,
+        opacity: 0.7,
+        dashArray: '5, 10',
+        dashOffset: '0'
+    }).addTo(map);
+    
+    // 简单的动画效果
+    var dashOffset = 0;
+    setInterval(function() {
+        dashOffset -= 1;
+        animatedPolyline.setStyle({dashOffset: dashOffset});
+    }, 100);
+    
+    // 添加方向箭头
+    routePoints.forEach((point, index) => {
+        if (index > 0) {
+            L.circleMarker(point, {
+                radius: 5,
+                color: '#ff6b35',
+                fillColor: '#ff6b35',
+                fillOpacity: 0.8,
+                weight: 2
+            }).addTo(map);
+        }
+    });
+    
+    // 调整地图视野
+    map.fitBounds(L.polyline(routePoints).getBounds().pad(0.1));
+    
+    // 显示路线详情
+    showRouteDetails(routeData);
+}
+
+// 显示路线详情
+function showRouteDetails(routeData) {
+    var detailsHtml = `
+        <div class="route-summary p-3 mb-3 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="row text-center">
+                <div class="col-4">
+                    <div style="font-size: 1.5em;">⏱️</div>
+                    <div style="font-size: 0.8em; opacity: 0.8;">总时长</div>
+                    <div style="font-weight: bold;">${routeData.total_time}分钟</div>
+                </div>
+                <div class="col-4">
+                    <div style="font-size: 1.5em;">🗺️</div>
+                    <div style="font-size: 0.8em; opacity: 0.8;">总距离</div>
+                    <div style="font-weight: bold;">${routeData.total_distance}米</div>
+                </div>
+                <div class="col-4">
+                    <div style="font-size: 1.5em;">⭐</div>
+                    <div style="font-size: 0.8em; opacity: 0.8;">难度</div>
+                    <div style="font-weight: bold;">${routeData.difficulty}</div>
+                </div>
+            </div>
+        </div>
+        
+        <h6 class="mb-3"><i class="fas fa-list-ol text-primary"></i> 参观顺序</h6>
+        <div class="exhibit-list">
+    `;
+    
+    routeData.recommended_exhibits.forEach((exhibitId, index) => {
+        var exhibit = exhibits.find(e => e.id === exhibitId);
+        if (exhibit) {
+            detailsHtml += `
+                <div class="exhibit-item d-flex align-items-center mb-3 p-3 border rounded hover-effect" 
+                     style="cursor: pointer; transition: all 0.2s ease;"
+                     onclick="focusOnExhibit('${exhibit.id}', ${index})">
+                    <div class="exhibit-number me-3">
+                        <span class="badge bg-primary rounded-circle" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.1em;">
+                            ${index + 1}
+                        </span>
+                    </div>
+                    <div class="exhibit-info flex-grow-1">
+                        <div class="fw-bold text-dark">${exhibit.name}</div>
+                        <div class="text-muted small">
+                            <i class="fas fa-tag"></i> ${exhibit.type} | 
+                            <i class="fas fa-clock"></i> ${exhibit.visit_duration}分钟 | 
+                            <i class="fas fa-star text-warning"></i> ${'★'.repeat(exhibit.importance)}
+                        </div>
+                        <div class="text-muted small mt-1">${exhibit.description}</div>
+                    </div>
+                    <div class="exhibit-action">
+                        <i class="fas fa-map-marker-alt text-primary"></i>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    detailsHtml += '</div>';
+    
+    if (routeData.ai_recommendations) {
+        detailsHtml += `
+            <div class="ai-recommendations mt-4">
+                <h6 class="text-info"><i class="fas fa-robot"></i> AI智能建议</h6>
+                <div class="alert alert-info mb-0">
+                    <div style="font-size: 0.95em;">${routeData.ai_recommendations}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 添加操作按钮
+    detailsHtml += `
+        <div class="mt-4 d-grid gap-2">
+            <button class="btn btn-success btn-sm" onclick="saveRoute()">
+                <i class="fas fa-save"></i> 保存此路线
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="shareRoute()">
+                <i class="fas fa-share-alt"></i> 分享路线
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('routeDetails').innerHTML = detailsHtml;
+    document.getElementById('routeResult').style.display = 'block';
+    
+    // 平滑滚动到结果区域
+    document.getElementById('routeResult').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+    });
+}
+
+// 聚焦到特定展品
+function focusOnExhibit(exhibitId, index) {
+    var exhibit = exhibits.find(e => e.id === exhibitId);
+    if (exhibit) {
+        map.setView([exhibit.lat, exhibit.lng], 19);
+        // 查找对应的标记并打开弹窗
+        exhibitMarkers.forEach(marker => {
+            var markerPos = marker.getLatLng();
+            if (Math.abs(markerPos.lat - exhibit.lat) < 0.0001 && 
+                Math.abs(markerPos.lng - exhibit.lng) < 0.0001) {
+                marker.openPopup();
+            }
+        });
+        updateMapStatus(`🎯 已定位到第${index + 1}站: ${exhibit.name}`);
+    }
+}
+
+// 保存路线
+function saveRoute() {
+    // 这里可以调用API保存路线
+    alert('路线保存功能开发中...');
+}
+
+// 分享路线
+function shareRoute() {
+    // 这里可以生成分享链接
+    if (navigator.share) {
+        navigator.share({
+            title: '南湖纪念馆智能路线',
+            text: '我在南湖纪念馆生成了一条个性化参观路线，快来看看吧！',
+            url: window.location.href
+        });
+    } else {
+        // 复制到剪贴板
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('路线链接已复制到剪贴板！');
+        });
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    console.log('🚀 南湖纪念馆智能路线规划系统已启动');
+    
+    // 添加键盘快捷键
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'f' || e.key === 'F') {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        }
+    });
+});
+
+// 添加悬停效果样式
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+.hover-effect:hover {
+    background-color: #f8f9fa !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+    transform: translateX(5px);
+}
+
+.exhibit-item:hover .exhibit-action i {
+    color: #dc3545 !important;
+}
+
+.leaflet-popup-content {
+    margin: 8px 12px !important;
+    line-height: 1.4 !important;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px !important;
+}
+
+@media (max-width: 991px) {
+    .col-lg-4 {
+        order: 2;
+    }
+    .col-lg-8 {
+        order: 1;
+    }
+    .position-sticky {
+        position: relative !important;
+        height: 60vh !important;
+    }
+    #map {
+        height: 60vh !important;
+    }
+}
+</style>
+`);
+</script>
+{% endblock %}

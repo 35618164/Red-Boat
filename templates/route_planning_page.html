@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block title %}智能路线规划 - 南湖纪念馆{% endblock %}
+
+{% block head %}
+<style>
+    .route-planner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+    
+    .planner-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .planner-header {
+        background: linear-gradient(45deg, #d63384, #dc3545);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .planner-content {
+        display: flex;
+        min-height: 600px;
+    }
+    
+    .preferences-panel {
+        flex: 1;
+        padding: 30px;
+        border-right: 1px solid #eee;
+        background: #f8f9fa;
+    }
+    
+    .result-panel {
+        flex: 2;
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    
+    .form-check {
+        margin-bottom: 8px;
+    }
+    
+    .btn-generate {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .btn-generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    
+    .route-result {
+        display: none;
+    }
+    
+    .route-summary {
+        background: #e3f2fd;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .exhibit-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+    }
+    
+    .exhibit-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .exhibit-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .exhibit-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .exhibit-duration {
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+    
+    .importance-stars {
+        color: #ffc107;
+        margin-left: 10px;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        display: none;
+    }
+    
+    .loading-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .recommendations {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+    
+    .recommendations h4 {
+        color: #856404;
+        margin-bottom: 10px;
+    }
+    
+    .recommendations ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .recommendations li {
+        padding: 5px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .recommendations li:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="route-planner">
+    <div class="planner-container">
+        <div class="planner-header">
+            <h1>🧭 南湖纪念馆智能路线规划</h1>
+            <p>基于AI大模型的个性化参观路线推荐系统</p>
+        </div>
+        
+        <div class="planner-content">
+            <!-- 偏好设置面板 -->
+            <div class="preferences-panel">
+                <h3>📋 个人偏好设置</h3>
+                <form id="preferencesForm">
+                    <div class="form-group">
+                        <label class="form-label">👤 年龄组</label>
+                        <select name="age_group" class="form-control">
+                            <option value="child">儿童 (12岁以下)</option>
+                            <option value="youth">青少年 (13-17岁)</option>
+                            <option value="adult" selected>成人 (18-59岁)</option>
+                            <option value="senior">老年人 (60岁以上)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">⏰ 可用时间 (分钟)</label>
+                        <input type="range" name="available_time" class="form-control" min="30" max="180" value="90" id="timeSlider">
+                        <div class="text-center mt-2">
+                            <span id="timeDisplay">90</span> 分钟
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">💪 体力状况</label>
+                        <select name="physical_ability" class="form-control">
+                            <option value="low">较弱 - 需要经常休息</option>
+                            <option value="medium" selected>一般 - 正常参观</option>
+                            <option value="high">较好 - 可以长时间参观</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">👥 参观类型</label>
+                        <select name="group_type" class="form-control">
+                            <option value="individual" selected>个人参观</option>
+                            <option value="family">家庭参观</option>
+                            <option value="group">团体参观</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">🎯 参观目的</label>
+                        <select name="visit_purpose" class="form-control">
+                            <option value="education" selected>教育学习</option>
+                            <option value="leisure">休闲娱乐</option>
+                            <option value="research">学术研究</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">🏷️ 兴趣标签 (可多选)</label>
+                        <div class="form-check">
+                            <input type="checkbox" name="interests" value="历史" id="history" checked>
+                            <label for="history">历史文化</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" name="interests" value="革命" id="revolution" checked>
+                            <label for="revolution">革命精神</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" name="interests" value="文物" id="artifacts">
+                            <label for="artifacts">文物古迹</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" name="interests" value="互动" id="interactive">
+                            <label for="interactive">互动体验</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" name="interests" value="多媒体" id="multimedia">
+                            <label for="multimedia">多媒体展示</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-generate">
+                        🎯 生成智能路线
+                    </button>
+                </form>
+            </div>
+            
+            <!-- 结果展示面板 -->
+            <div class="result-panel">
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>🤖 AI正在为您生成个性化路线...</p>
+                </div>
+                
+                <div class="route-result" id="routeResult">
+                    <h3>📍 您的专属路线</h3>
+                    
+                    <div class="route-summary" id="routeSummary">
+                        <!-- 路线摘要将在这里显示 -->
+                    </div>
+                    
+                    <div class="route-details" id="routeDetails">
+                        <!-- 详细路线将在这里显示 -->
+                    </div>
+                    
+                    <div class="recommendations" id="recommendations">
+                        <!-- 个性化建议将在这里显示 -->
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-success" onclick="saveRoute()">💾 保存路线</button>
+                        <button class="btn btn-info" onclick="shareRoute()">📤 分享路线</button>
+                        <button class="btn btn-secondary" onclick="generateNewRoute()">🔄 重新生成</button>
+                    </div>
+                </div>
+                
+                <div id="defaultContent">
+                    <h3>🌟 欢迎使用智能路线规划</h3>
+                    <p>请在左侧设置您的个人偏好，我们的AI系统将为您生成最适合的参观路线。</p>
+                    
+                    <div class="mt-4">
+                        <h4>🎯 系统特色</h4>
+                        <ul>
+                            <li>🤖 基于大模型的智能推荐</li>
+                            <li>📊 个性化偏好分析</li>
+                            <li>⏰ 动态时间优化</li>
+                            <li>🎨 沉浸式体验设计</li>
+                            <li>📈 实时反馈优化</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h4>📈 推荐模板</h4>
+                        <div class="row" id="templateCards">
+                            <!-- 推荐模板将通过JavaScript加载 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 时间滑块事件
+    const timeSlider = document.getElementById('timeSlider');
+    const timeDisplay = document.getElementById('timeDisplay');
+    
+    timeSlider.addEventListener('input', function() {
+        timeDisplay.textContent = this.value;
+    });
+    
+    // 加载推荐模板
+    loadRecommendations();
+    
+    // 表单提交事件
+    document.getElementById('preferencesForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateRoute();
+    });
+});
+
+async function generateRoute() {
+    const form = document.getElementById('preferencesForm');
+    const formData = new FormData(form);
+    
+    // 收集兴趣标签
+    const interests = [];
+    document.querySelectorAll('input[name="interests"]:checked').forEach(checkbox => {
+        interests.push(checkbox.value);
+    });
+    
+    // 构建请求数据
+    const requestData = {
+        age_group: formData.get('age_group'),
+        available_time: parseInt(formData.get('available_time')),
+        physical_ability: formData.get('physical_ability'),
+        group_type: formData.get('group_type'),
+        visit_purpose: formData.get('visit_purpose'),
+        interests: interests
+    };
+    
+    // 显示加载状态
+    document.getElementById('defaultContent').style.display = 'none';
+    document.getElementById('routeResult').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    
+    try {
+        const response = await fetch('/api/route/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayRoute(result.data);
+        } else {
+            alert('路线生成失败: ' + result.message);
+            document.getElementById('defaultContent').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+        document.getElementById('defaultContent').style.display = 'block';
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+function displayRoute(routeData) {
+    // 显示路线摘要
+    const summary = routeData.summary;
+    document.getElementById('routeSummary').innerHTML = `
+        <h4>📊 路线概览</h4>
+        <div class="row">
+            <div class="col-md-3">
+                <strong>展品数量:</strong> ${summary.total_exhibits} 个
+            </div>
+            <div class="col-md-3">
+                <strong>预计时间:</strong> ${summary.estimated_time} 分钟
+            </div>
+            <div class="col-md-3">
+                <strong>路线长度:</strong> ${summary.total_distance} 米
+            </div>
+            <div class="col-md-3">
+                <strong>难度等级:</strong> ${summary.difficulty}
+            </div>
+        </div>
+    `;
+    
+    // 显示详细路线
+    let routeHtml = '<h4>🗺️ 详细路线</h4>';
+    routeData.route.forEach((exhibit, index) => {
+        const stars = '⭐'.repeat(exhibit.importance);
+        routeHtml += `
+            <div class="exhibit-card">
+                <div class="exhibit-header">
+                    <div>
+                        <span class="exhibit-name">${index + 1}. ${exhibit.name}</span>
+                        <span class="importance-stars">${stars}</span>
+                    </div>
+                    <span class="exhibit-duration">${exhibit.visit_duration}分钟</span>
+                </div>
+                <p class="text-muted">${exhibit.description}</p>
+                <small class="text-info">类别: ${exhibit.category} | 位置: (${exhibit.location[0]}, ${exhibit.location[1]})</small>
+            </div>
+        `;
+    });
+    document.getElementById('routeDetails').innerHTML = routeHtml;
+    
+    // 显示个性化建议
+    if (routeData.recommendations && routeData.recommendations.length > 0) {
+        let recommendationsHtml = '<h4>💡 个性化建议</h4><ul>';
+        routeData.recommendations.forEach(rec => {
+            recommendationsHtml += `<li>• ${rec}</li>`;
+        });
+        recommendationsHtml += '</ul>';
+        document.getElementById('recommendations').innerHTML = recommendationsHtml;
+    }
+    
+    // 显示结果
+    document.getElementById('routeResult').style.display = 'block';
+}
+
+async function loadRecommendations() {
+    try {
+        const response = await fetch('/api/recommendations');
+        const result = await response.json();
+        
+        if (result.success) {
+            let templateHtml = '';
+            result.data.forEach(template => {
+                templateHtml += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${template.name}</h5>
+                                <p class="card-text">${template.description}</p>
+                                <small class="text-muted">
+                                    ⏰ ${template.duration}分钟 | 
+                                    📊 ${template.difficulty} | 
+                                    👥 ${template.target_audience}
+                                </small>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-sm btn-outline-primary" onclick="useTemplate(${template.id})">
+                                    使用此模板
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('templateCards').innerHTML = templateHtml;
+        }
+    } catch (error) {
+        console.error('Error loading recommendations:', error);
+    }
+}
+
+function useTemplate(templateId) {
+    // 根据模板设置表单值
+    alert('功能开发中，敬请期待！');
+}
+
+function saveRoute() {
+    alert('路线保存功能开发中！');
+}
+
+function shareRoute() {
+    alert('路线分享功能开发中！');
+}
+
+function generateNewRoute() {
+    document.getElementById('routeResult').style.display = 'none';
+    document.getElementById('defaultContent').style.display = 'block';
+}
+</script>
+{% endblock %}

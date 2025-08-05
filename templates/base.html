@@ -3,23 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if title %}{{ title }} - {% endif %}Flask团队项目</title>
+    <title>{% if title %}{{ title }} - {% endif %}南湖纪念馆智能导览系统</title>
     <!-- 使用本地Bootstrap文件以提高加载速度 -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Flask团队项目</a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container-fluid">
+            <!-- 左侧品牌 -->
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <span class="brand-text">红船项目</span>
+            </a>
+            
+            <!-- 移动端折叠按钮 -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
+            <!-- 右侧导航菜单 -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('index') }}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('route_planner_page') }}">智能导航</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('about') }}">关于我们</a>
@@ -37,8 +49,8 @@
     <!-- 页脚 -->
     <footer class="bg-light mt-5 py-4">
         <div class="container text-center">
-            <p>&copy; 2025 Flask团队项目. 小组合作开发示例.</p>
-            <p>当前时间: {{ current_time if current_time else '' }}</p>
+            <p>&copy; 2025 南湖纪念馆智能导览系统. 让红色历史触手可及.</p>
+            <p class="text-muted small">基于AI大模型技术 · 个性化路线规划 · 智能导览服务</p>
         </div>
     </footer>
 
